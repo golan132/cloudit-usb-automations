@@ -130,8 +130,14 @@ function Main {
         exit 1
     }
     
-    # Determine paths
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    # Determine paths - handle different invocation methods
+    if ($MyInvocation.MyCommand.Path) {
+        $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    } elseif ($PSScriptRoot) {
+        $scriptDir = $PSScriptRoot
+    } else {
+        $scriptDir = Get-Location
+    }
     $projectRoot = Split-Path -Parent $scriptDir
     
     if (-not $IsoPath) {
@@ -164,6 +170,7 @@ function Main {
         if ($copySuccess) {
             Write-Log "ISO extraction completed successfully!" -Level "SUCCESS"
             Write-Log "Extracted contents location: $ExtractPath" -Level "SUCCESS"
+            exit 0
         } else {
             Write-Log "ISO extraction failed" -Level "ERROR"
             exit 1

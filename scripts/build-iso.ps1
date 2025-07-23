@@ -224,8 +224,14 @@ function Main {
         exit 1
     }
     
-    # Determine paths
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    # Determine paths - handle different invocation methods
+    if ($MyInvocation.MyCommand.Path) {
+        $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    } elseif ($PSScriptRoot) {
+        $scriptDir = $PSScriptRoot
+    } else {
+        $scriptDir = Get-Location
+    }
     $projectRoot = Split-Path -Parent $scriptDir
     
     if (-not $ExtractedIsoPath) {

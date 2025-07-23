@@ -193,8 +193,14 @@ function Main {
         exit 1
     }
     
-    # Determine paths
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    # Determine paths - handle different invocation methods
+    if ($MyInvocation.MyCommand.Path) {
+        $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    } elseif ($PSScriptRoot) {
+        $scriptDir = $PSScriptRoot
+    } else {
+        $scriptDir = Get-Location
+    }
     $projectRoot = Split-Path -Parent $scriptDir
     
     if (-not $ExtractedIsoPath) {
@@ -232,6 +238,7 @@ function Main {
     
     Write-Log "autounattend.xml injection completed successfully!" -Level "SUCCESS"
     Write-Log "The extracted ISO is now ready for building" -Level "SUCCESS"
+    exit 0
 }
 
 # Run main function if script is executed directly

@@ -30,21 +30,138 @@ cloudit-usb-automations/
 
 ## Prerequisites
 
+### System Requirements
 - **Windows 10/11** with PowerShell 5.0 or higher
 - **Administrator privileges** (required for ISO manipulation)
-- **Node.js** (for running the XML merge script)
-- **Windows ADK** (Assessment and Deployment Kit) - for building ISO files
-  - Download from: https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install
+- **At least 10GB free disk space** (for ISO extraction and building)
+
+### Required Software
+
+#### 1. Node.js (Required)
+**Purpose**: Used for merging XML configuration fragments into the final autounattend.xml
+
+**Installation Options:**
+
+**Option A - Direct Download:**
+1. Go to https://nodejs.org/
+2. Download the LTS version (recommended)
+3. Run the installer as Administrator
+4. Accept all default settings
+5. Verify installation: Open Command Prompt and run `node --version`
+
+**Option B - Using Chocolatey (if available):**
+```powershell
+# Run as Administrator
+choco install nodejs -y
+```
+
+**Option C - Using Winget:**
+```powershell
+# Run as Administrator  
+winget install OpenJS.NodeJS
+```
+
+#### 2. Windows ADK (Required for ISO Building)
+**Purpose**: Provides `oscdimg.exe` tool needed to create bootable ISO files
+
+**Installation:**
+1. **Download**: Go to https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install
+2. **Download the Windows ADK for Windows 11** (or latest version)
+3. **Run installer as Administrator**
+4. **Select components**: Make sure to check **"Deployment Tools"** - this includes oscdimg.exe
+5. **Complete installation** (requires ~1GB space)
+6. **Verify**: Look for oscdimg.exe in:
+   - `C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\`
+
+> **Note**: You can run the script without Windows ADK, but it will stop after injecting the unattended file. You can manually create bootable media from the `iso\extracted\` folder.
+
+#### 3. Windows ISO File
+**Purpose**: Source Windows installation media to customize
+
+**Requirements:**
+- Windows 10 or Windows 11 ISO file
+- Minimum 4GB file size
+- Downloaded from official Microsoft sources (recommended)
+
+**Where to get:**
+- **Windows 11**: https://www.microsoft.com/software-download/windows11
+- **Windows 10**: https://www.microsoft.com/software-download/windows10
+- **Volume Licensing**: Microsoft Volume Licensing Service Center (for business)
 
 ## Quick Start
 
-### 1. Setup
-1. Clone or download this project
-2. Place your Windows ISO file in the `iso/source/` directory
-3. Open PowerShell as Administrator
-4. Navigate to the project directory
+### 1. Prerequisites Installation
 
-### 2. Run the Automation
+**Before starting, install the required software:**
+
+#### Install Node.js
+```powershell
+# Option 1: Download from https://nodejs.org/ and run installer as Admin
+# Option 2: Using Chocolatey (if available)
+choco install nodejs -y
+# Option 3: Using Winget
+winget install OpenJS.NodeJS
+```
+
+#### Install Windows ADK
+1. Download from: https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install
+2. Run installer as **Administrator**
+3. Select **"Deployment Tools"** component
+4. Complete installation
+
+#### Verify Prerequisites
+Run this command to check if everything is installed:
+```powershell
+# Check Node.js
+node --version
+
+# Check Windows ADK
+Test-Path "${env:ProgramFiles(x86)}\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\oscdimg.exe"
+```
+
+**Or use the built-in checker:**
+```powershell
+# Run the example script to check all prerequisites
+.\example-usage.ps1
+```
+
+### 2. Project Setup
+1. **Clone or download** this project to your computer
+2. **Place your Windows ISO file** in the `iso/source/` directory
+   ```powershell
+   # Example: Copy your Windows ISO
+   Copy-Item "C:\Downloads\Windows11.iso" "C:\path\to\cloudit-usb-automations\iso\source\"
+   ```
+
+### 3. Running the Script
+
+#### Method 1: Using Batch File (Easiest)
+1. **Double-click** `run-admin.bat` in the project folder
+2. The script will automatically request Administrator privileges
+3. Follow the on-screen prompts
+
+#### Method 2: PowerShell (Recommended)
+1. **Right-click** on **PowerShell** in Start Menu
+2. Select **"Run as administrator"**
+3. Navigate to project directory:
+   ```powershell
+   cd "C:\path\to\cloudit-usb-automations"
+   ```
+4. Run the main script:
+   ```powershell
+   .\run.ps1
+   ```
+
+#### Method 3: Command Prompt
+1. **Right-click** on **Command Prompt** in Start Menu  
+2. Select **"Run as administrator"**
+3. Navigate and run:
+   ```cmd
+   cd "C:\path\to\cloudit-usb-automations"
+   powershell -ExecutionPolicy Bypass -File ".\run.ps1"
+   ```
+
+### 4. Script Options
 ```powershell
 # Run the complete process
 .\run.ps1
@@ -56,7 +173,22 @@ cloudit-usb-automations/
 .\run.ps1 -OutputPath "C:\output\CustomWindows.iso"
 ```
 
-### 3. Advanced Usage
+### 4. Script Options
+
+**Basic Usage:**
+```powershell
+# Run the complete automation process
+.\run.ps1
+
+# Use a specific ISO file (if not in iso/source/)
+.\run.ps1 -IsoPath "C:\path\to\your\windows.iso"
+
+# Specify custom output location
+.\run.ps1 -OutputPath "C:\CustomISOs\MyWindows.iso"
+```
+
+**Advanced Options:**
+**Advanced Options:**
 ```powershell
 # Clean working directories only
 .\run.ps1 -CleanOnly
@@ -67,8 +199,33 @@ cloudit-usb-automations/
 # Skip ISO building (stop after injection)
 .\run.ps1 -SkipBuild
 
-# Show help
+# Show help and all available options
 .\run.ps1 -Help
+
+# Enable verbose output for troubleshooting
+.\run.ps1 -Verbose
+```
+
+### 5. What Happens During Execution
+
+The script will automatically:
+
+1. **✅ Check Prerequisites**: Verify Node.js, Windows ADK, and admin privileges
+2. **✅ Build Configuration**: Merge XML fragments into `autounattend.xml`
+3. **✅ Extract ISO**: Mount and copy your Windows ISO contents
+4. **✅ Inject Automation**: Add unattended file and post-install scripts
+5. **✅ Build New ISO**: Create your customized Windows ISO (if ADK is installed)
+
+**Expected Output:**
+```
+= CloudIT Windows ISO Automation =
+[2025-07-23 17:22:26] [SUCCESS] Running as Administrator: OK
+[2025-07-23 17:22:26] [SUCCESS] Node.js version: v20.19.0
+[2025-07-23 17:22:26] [SUCCESS] Found ISO file: Win11_24H2_English_x64.iso
+[2025-07-23 17:22:32] [SUCCESS] ISO mounted successfully at: F:\
+[2025-07-23 17:22:40] [SUCCESS] ISO extraction completed successfully!
+[2025-07-23 17:22:40] [SUCCESS] autounattend.xml injection completed successfully!
+[2025-07-23 17:22:45] [SUCCESS] ISO built successfully!
 ```
 
 ## How It Works
@@ -137,23 +294,128 @@ Recommended testing workflow:
 
 ## Troubleshooting
 
-### Common Issues
+### Prerequisites Issues
 
-**"oscdimg.exe not found"**
-- Install Windows ADK (Assessment and Deployment Kit)
-- Ensure the installation includes "Deployment Tools"
+**❌ "This script must be run as Administrator"**
+- **Solution**: Right-click PowerShell and select "Run as administrator"
+- **Alternative**: Use the `run-admin.bat` file which automatically requests admin privileges
 
-**"Node.js not found"**
-- Install Node.js from https://nodejs.org/
-- Or install via Chocolatey: `choco install nodejs`
+**❌ "Node.js not found"**
+- **Solution 1**: Install from https://nodejs.org/ (run installer as Admin)
+- **Solution 2**: Using Chocolatey: `choco install nodejs -y`
+- **Solution 3**: Using Winget: `winget install OpenJS.NodeJS`
+- **Verify**: Run `node --version` in Command Prompt
 
-**"Must be run as Administrator"**
-- Right-click PowerShell and "Run as Administrator"
-- ISO manipulation requires elevated privileges
+**❌ "oscdimg.exe not found" / "Windows ADK not found"**
+- **Solution**: Install Windows ADK from Microsoft
+  1. Download: https://docs.microsoft.com/en-us/windows-hardware/get-started/adk-install
+  2. Run installer as Administrator
+  3. **Important**: Select "Deployment Tools" component during installation
+  4. Complete installation (requires ~1GB space)
+- **Alternative**: Run script with `-SkipBuild` to create bootable USB manually
 
-**XML validation errors**
-- Check syntax in `unattended/passes/*.xml` files
-- Ensure all pass files have valid XML structure
+### Execution Issues
+
+**❌ "Cannot bind argument to parameter 'Path' because it is null"**
+- **Cause**: PowerShell execution policy or path detection issue
+- **Solution**: Run with explicit execution policy:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File ".\run.ps1"
+  ```
+
+**❌ "No ISO files found in iso\source"**
+- **Solution**: Place a Windows ISO file in the `iso\source\` directory
+- **Example**: 
+  ```powershell
+  Copy-Item "C:\Downloads\Windows11.iso" ".\iso\source\"
+  ```
+
+**❌ "ISO file not found"**
+- **Check**: Verify the ISO file exists and is not corrupted
+- **Check**: Ensure the file has `.iso` extension
+- **Solution**: Use `-IsoPath` parameter to specify exact location:
+  ```powershell
+  .\run.ps1 -IsoPath "C:\full\path\to\windows.iso"
+  ```
+
+**❌ "Error mounting ISO"**
+- **Cause**: ISO file is corrupted or in use
+- **Solution 1**: Close any programs that might be using the ISO
+- **Solution 2**: Restart computer and try again
+- **Solution 3**: Re-download the ISO file from Microsoft
+
+**❌ "Robocopy completed with exit code"**
+- **Cause**: Usually not an error - Robocopy exit codes 0-1 are success
+- **Action**: Check if files were copied to `iso\extracted\` directory
+- **If files missing**: Run script again or check disk space
+
+### XML Configuration Issues
+
+**❌ "XML validation errors"**
+- **Check**: Syntax in `unattended\passes\*.xml` files
+- **Solution**: Ensure all XML files have proper opening/closing tags
+- **Reset**: Restore original XML files from repository
+
+**❌ "Merge script failed"**
+- **Check**: Node.js is properly installed
+- **Solution**: Navigate to unattended folder and test manually:
+  ```powershell
+  cd unattended
+  node merge.js
+  ```
+
+### Permission Issues
+
+**❌ "Access denied" errors**
+- **Cause**: Insufficient permissions or antivirus interference
+- **Solution 1**: Run PowerShell as Administrator
+- **Solution 2**: Temporarily disable real-time antivirus scanning
+- **Solution 3**: Add project folder to antivirus exclusions
+
+**❌ "ISO building fails with permissions"**
+- **Cause**: Files in extracted folder are read-only
+- **Solution**: Script should handle this automatically, but you can manually run:
+  ```powershell
+  Get-ChildItem ".\iso\extracted" -Recurse | ForEach-Object { $_.Attributes = $_.Attributes -band (-bnot [System.IO.FileAttributes]::ReadOnly) }
+  ```
+
+### Performance Issues
+
+**❌ "Script runs very slowly"**
+- **Cause**: Large ISO files or slow disk
+- **Normal**: Extracting 5GB+ ISO files takes 5-15 minutes
+- **Tip**: Use SSD storage for better performance
+- **Tip**: Close other programs to free up system resources
+
+### Getting Help
+
+**📋 Enable Verbose Logging:**
+```powershell
+.\run.ps1 -Verbose
+```
+
+**📋 Check Individual Components:**
+```powershell
+# Test XML merge only
+cd unattended
+node merge.js
+
+# Test ISO extraction only  
+.\scripts\extract-iso.ps1
+
+# Test prerequisites
+.\example-usage.ps1
+```
+
+**📋 Reset and Clean:**
+```powershell
+# Clean all working directories
+.\run.ps1 -CleanOnly
+
+# Or manually delete:
+Remove-Item ".\iso\extracted\*" -Recurse -Force
+Remove-Item ".\unattended\build\*" -Recurse -Force
+```
 
 ### Log Files
 - Build logs are displayed in the console

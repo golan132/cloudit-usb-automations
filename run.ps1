@@ -8,8 +8,7 @@ param(
     [string]$OutputPath,
     [switch]$SkipExtraction,
     [switch]$SkipBuild,
-    [switch]$CleanOnly,
-    [switch]$Verbose
+    [switch]$CleanOnly
 )
 
 # Set error action preference
@@ -115,7 +114,15 @@ function Test-Prerequisites {
 function Initialize-Project {
     Write-Log "Initializing project structure..." -Level "HEADER"
     
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    # Get script directory - handle different invocation methods
+    if ($MyInvocation.MyCommand.Path) {
+        $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    } elseif ($PSScriptRoot) {
+        $scriptDir = $PSScriptRoot
+    } else {
+        $scriptDir = Get-Location
+    }
+    
     $script:ProjectRoot = $scriptDir
     
     # Define project paths
@@ -213,11 +220,11 @@ function Invoke-IsoExtraction {
     }
     
     try {
-        $scriptArgs = @()
+        $scriptArgs = @{}
         if ($IsoPath) {
-            $scriptArgs += "-IsoPath", "`"$IsoPath`""
+            $scriptArgs['IsoPath'] = $IsoPath
         }
-        $scriptArgs += "-ExtractPath", "`"$($script:Paths.IsoExtracted)`""
+        $scriptArgs['ExtractPath'] = $script:Paths.IsoExtracted
         
         Write-Log "Executing ISO extraction script..."
         & $extractScript @scriptArgs
@@ -275,15 +282,15 @@ function Invoke-IsoBuild {
     }
     
     try {
-        $scriptArgs = @()
-        $scriptArgs += "-ExtractedIsoPath", "`"$($script:Paths.IsoExtracted)`""
+        $scriptArgs = @{}
+        $scriptArgs['ExtractedIsoPath'] = $script:Paths.IsoExtracted
         
         if ($OutputPath) {
-            $scriptArgs += "-OutputIsoPath", "`"$OutputPath`""
+            $scriptArgs['OutputIsoPath'] = $OutputPath
         } else {
             $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
             $defaultOutput = Join-Path $script:Paths.IsoResult "CloudIT_Windows_$timestamp.iso"
-            $scriptArgs += "-OutputIsoPath", "`"$defaultOutput`""
+            $scriptArgs['OutputIsoPath'] = $defaultOutput
         }
         
         Write-Log "Executing ISO build script..."
@@ -343,7 +350,7 @@ function Show-Help {
     Write-Host "  -SkipExtraction      Skip ISO extraction (use existing extracted files)"
     Write-Host "  -SkipBuild           Skip ISO building (stops after injection)"
     Write-Host "  -CleanOnly           Only clean working directories and exit"
-    Write-Host "  -Verbose             Enable verbose output"
+    Write-Host "  -Verbose             Enable verbose output (use -Verbose switch)"
     Write-Host "  -Help                Show this help message"
     Write-Host ""
     Write-Host "Examples:"
