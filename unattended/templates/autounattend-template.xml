@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <!-- WindowsPE Pass -->
+    {{WINDOWSPE_PASS}}
+    
+    <!-- OfflineServicing Pass -->
+    {{OFFLINESERVICING_PASS}}
+    
+    <!-- Generalize Pass -->
+    {{GENERALIZE_PASS}}
+    
+    <!-- Specialize Pass -->
+    {{SPECIALIZE_PASS}}
+    
+    <!-- AuditSystem Pass -->
+    {{AUDITSYSTEM_PASS}}
+    
+    <!-- AuditUser Pass -->
+    {{AUDITUSER_PASS}}
+    
+    <!-- OOBE System Pass -->
+    {{OOBESYSTEM_PASS}}
+</unattend>

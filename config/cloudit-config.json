@@ -1,0 +1,31 @@
+{
+  "userAccount": {
+    "username": "cloudit",
+    "password": "CloudIT",
+    "fullName": "CloudIT User",
+    "description": "Default CloudIT automation user",
+    "autoLogon": true
+  },
+  "isoSettings": {
+    "label": "CloudIT_Windows",
+    "publisher": "CloudIT",
+    "outputPath": "./iso/result"
+  },
+  "buildSettings": {
+    "timeout": 600000,
+    "retryAttempts": 3,
+    "cleanupAfterBuild": false,
+    "preserveLogs": true
+  },
+  "paths": {
+    "templates": "./unattended/templates",
+    "passes": "./unattended/passes",
+    "scripts": "./unattended/scripts",
+    "build": "./unattended/build"
+  },
+  "validation": {
+    "enableXmlValidation": true,
+    "enableSchemaValidation": false,
+    "strictMode": false
+  }
+}
