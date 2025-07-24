@@ -7,8 +7,12 @@
     "build": "tsc && node dist/unattended/merge.js",
     "build-xml": "tsc && node dist/unattended/merge.js",
     "compile": "tsc",
-    "test": "tsc && node dist/unattended/merge.js && echo Build test completed",
-    "clean": "powershell -Command \"Remove-Item -Path 'unattended/build/*', 'iso/extracted/*', 'dist/*' -Recurse -Force -ErrorAction SilentlyContinue\""
+    "test": "tsc && node dist/tests/simple-test.js",
+    "test:watch": "tsc --watch",
+    "validate": "tsc --noEmit",
+    "verify": "tsc && node dist/tests/verify-improvements.js",
+    "clean": "powershell -Command \"Remove-Item -Path 'unattended/build/*', 'iso/extracted/*', 'dist/*' -Recurse -Force -ErrorAction SilentlyContinue\"",
+    "dev": "tsc --watch"
   },
   "keywords": [
     "windows",
