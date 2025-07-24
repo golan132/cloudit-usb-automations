@@ -41,9 +41,9 @@ function Write-Log {
 function Write-Header {
     param([string]$Title)
     Write-Host ""
-    Write-Host "=" * 80 -ForegroundColor Cyan
+    Write-Host ("=" * 80) -ForegroundColor Cyan
     Write-Host "  $Title" -ForegroundColor Cyan
-    Write-Host "=" * 80 -ForegroundColor Cyan
+    Write-Host ("=" * 80) -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -68,7 +68,7 @@ function Test-Prerequisites {
     }
     Write-Log "Running as Administrator: OK" -Level "SUCCESS"
     
-    # Check for Node.js (required for merge.js)
+    # Check for Node.js (required for merge.ts compilation)
     try {
         $nodeVersion = node --version 2>$null
         if ($nodeVersion) {
@@ -84,7 +84,33 @@ function Test-Prerequisites {
             }
         }
     } catch {
-        Write-Log "Node.js not found. Please install Node.js from https://nodejs.org/" -Level "ERROR"
+        Write-Log "Error checking Node.js: $($_.Exception.Message)" -Level "ERROR"
+        return $false
+    }
+    
+    # Check for TypeScript compiler
+    try {
+        $tscVersion = & tsc --version 2>$null
+        if ($LASTEXITCODE -eq 0 -and $tscVersion) {
+            Write-Log "TypeScript version: $tscVersion" -Level "SUCCESS"
+        } else {
+            Write-Log "TypeScript not found. Installing TypeScript..." -Level "WARNING"
+            $installResult = & npm install -g typescript 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                $tscVersion = & tsc --version 2>$null
+                if ($LASTEXITCODE -eq 0 -and $tscVersion) {
+                    Write-Log "TypeScript installed: $tscVersion" -Level "SUCCESS"
+                } else {
+                    Write-Log "Failed to verify TypeScript installation" -Level "ERROR"
+                    return $false
+                }
+            } else {
+                Write-Log "Failed to install TypeScript: $installResult" -Level "ERROR"
+                return $false
+            }
+        }
+    } catch {
+        Write-Log "Error checking TypeScript: $($_.Exception.Message)" -Level "ERROR"
         return $false
     }
     
@@ -134,7 +160,8 @@ function Initialize-Project {
         IsoExtracted = Join-Path $scriptDir "iso\extracted"
         IsoResult = Join-Path $scriptDir "iso\result"
         Scripts = Join-Path $scriptDir "scripts"
-        MergeScript = Join-Path $scriptDir "unattended\merge.js"
+        MergeScript = Join-Path $scriptDir "dist\unattended\merge.js"
+        DistDir = Join-Path $scriptDir "dist"
     }
     
     # Create missing directories
@@ -170,19 +197,33 @@ function Clear-WorkingDirectories {
 function Build-AutounattendFile {
     Write-Log "Building autounattend.xml file..." -Level "HEADER"
     
+    # First, compile TypeScript
+    Write-Log "Compiling TypeScript..."
+    try {
+        $compileResult = tsc 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log "TypeScript compilation failed: $compileResult" -Level "ERROR"
+            return $false
+        }
+        Write-Log "TypeScript compilation successful" -Level "SUCCESS"
+    } catch {
+        Write-Log "Error during TypeScript compilation: $($_.Exception.Message)" -Level "ERROR"
+        return $false
+    }
+    
     $mergeScriptPath = $script:Paths.MergeScript
     
     if (-not (Test-Path $mergeScriptPath)) {
-        Write-Log "Merge script not found: $mergeScriptPath" -Level "ERROR"
+        Write-Log "Compiled merge script not found: $mergeScriptPath" -Level "ERROR"
         return $false
     }
     
     try {
         Write-Log "Executing merge script..."
         $originalLocation = Get-Location
-        Set-Location (Split-Path $mergeScriptPath -Parent)
+        Set-Location $script:Paths.Root
         
-        $result = node merge.js 2>&1
+        $result = node $mergeScriptPath 2>&1
         
         if ($LASTEXITCODE -eq 0) {
             Write-Log "autounattend.xml built successfully" -Level "SUCCESS"

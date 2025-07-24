@@ -24,7 +24,7 @@ unattended/
 ├── build/              # Generated output files
 │   └── autounattend.xml    # Final generated unattended file
 │
-├── merge.js            # Node.js script to combine XML fragments
+├── merge.ts            # TypeScript script to combine XML fragments
 └── README.md           # This documentation
 ```
 
@@ -186,12 +186,14 @@ Edit `passes/specialize.xml`:
 
 ## Building the Unattended File
 
-The `merge.js` script combines all XML fragments into a single `autounattend.xml` file:
+The `merge.ts` script combines all XML fragments into a single `autounattend.xml` file:
 
 ### Manual Build
 ```bash
 cd unattended
-node merge.js
+npm run build
+# or manually:
+tsc && node dist/unattended/merge.js
 ```
 
 ### Automatic Build

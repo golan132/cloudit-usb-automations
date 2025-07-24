@@ -11,7 +11,7 @@ cloudit-usb-automations/
 │   ├── scripts/         # Post-installation scripts
 │   ├── templates/       # Main XML wrapper template
 │   ├── build/          # Generated autounattend.xml output
-│   ├── merge.js        # Script to assemble XML parts
+│   ├── merge.ts        # TypeScript script to assemble XML parts
 │   └── README.md       # Unattended setup documentation
 │
 ├── iso/                # Windows ISO management
@@ -232,7 +232,7 @@ The script will automatically:
 
 The automation process consists of several steps:
 
-1. **XML Assembly** (`unattended/merge.js`)
+1. **XML Assembly** (`unattended/merge.ts`)
    - Combines XML fragments from `unattended/passes/` 
    - Uses the template from `unattended/templates/`
    - Outputs complete `autounattend.xml` to `unattended/build/`
@@ -361,7 +361,9 @@ Recommended testing workflow:
 - **Solution**: Navigate to unattended folder and test manually:
   ```powershell
   cd unattended
-  node merge.js
+  npm run build
+  # or manually:
+  tsc && node dist/unattended/merge.js
   ```
 
 ### Permission Issues
@@ -398,7 +400,7 @@ Recommended testing workflow:
 ```powershell
 # Test XML merge only
 cd unattended
-node merge.js
+npm run build
 
 # Test ISO extraction only  
 .\scripts\extract-iso.ps1

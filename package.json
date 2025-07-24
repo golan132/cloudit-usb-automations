@@ -2,11 +2,13 @@
   "name": "cloudit-usb-automations",
   "version": "1.0.0",
   "description": "Automated Windows ISO customization with unattended installation",
-  "main": "unattended/merge.js",
+  "main": "dist/unattended/merge.js",
   "scripts": {
-    "build": "node unattended/merge.js",
-    "test": "node unattended/merge.js && echo Build test completed",
-    "clean": "powershell -Command \"Remove-Item -Path 'unattended/build/*', 'iso/extracted/*' -Recurse -Force -ErrorAction SilentlyContinue\""
+    "build": "tsc && node dist/unattended/merge.js",
+    "build-xml": "tsc && node dist/unattended/merge.js",
+    "compile": "tsc",
+    "test": "tsc && node dist/unattended/merge.js && echo Build test completed",
+    "clean": "powershell -Command \"Remove-Item -Path 'unattended/build/*', 'iso/extracted/*', 'dist/*' -Recurse -Force -ErrorAction SilentlyContinue\""
   },
   "keywords": [
     "windows",
@@ -28,5 +30,9 @@
   "bugs": {
     "url": "https://github.com/ClickIDF/cloudit-usb-automations/issues"
   },
-  "homepage": "https://github.com/ClickIDF/cloudit-usb-automations#readme"
+  "homepage": "https://github.com/ClickIDF/cloudit-usb-automations#readme",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
 }

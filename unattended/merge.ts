@@ -1,11 +1,29 @@
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
+
+interface BuildResult {
+    success: boolean;
+    outputPath?: string;
+    isValid?: boolean;
+    error?: string;
+}
+
+interface PassMapping {
+    [key: string]: string;
+}
 
 class AutoUnattendBuilder {
+    private templatePath: string;
+    private passesDir: string;
+    private buildDir: string;
+    private outputPath: string;
+
     constructor() {
-        this.templatePath = path.join(__dirname, 'templates', 'autounattend-template.xml');
-        this.passesDir = path.join(__dirname, 'passes');
-        this.buildDir = path.join(__dirname, 'build');
+        // Paths relative to the unattended directory (not dist)
+        const unattendedDir = path.join(__dirname, '../../unattended');
+        this.templatePath = path.join(unattendedDir, 'templates', 'autounattend-template.xml');
+        this.passesDir = path.join(unattendedDir, 'passes');
+        this.buildDir = path.join(unattendedDir, 'build');
         this.outputPath = path.join(this.buildDir, 'autounattend.xml');
         
         // Ensure build directory exists
@@ -14,16 +32,16 @@ class AutoUnattendBuilder {
         }
     }
 
-    readTemplate() {
+    private readTemplate(): string {
         try {
             return fs.readFileSync(this.templatePath, 'utf8');
         } catch (error) {
-            console.error(`Error reading template file: ${error.message}`);
+            console.error(`Error reading template file: ${(error as Error).message}`);
             throw error;
         }
     }
 
-    readPassFile(passName) {
+    private readPassFile(passName: string): string {
         const passPath = path.join(this.passesDir, `${passName}.xml`);
         try {
             if (!fs.existsSync(passPath)) {
@@ -32,18 +50,18 @@ class AutoUnattendBuilder {
             }
             return fs.readFileSync(passPath, 'utf8');
         } catch (error) {
-            console.error(`Error reading pass file ${passName}: ${error.message}`);
+            console.error(`Error reading pass file ${passName}: ${(error as Error).message}`);
             return '';
         }
     }
 
-    buildAutounattend() {
+    private buildAutounattend(): string {
         console.log('Starting autounattend.xml build process...');
         
         let template = this.readTemplate();
         
         // Define the mapping between placeholders and pass files
-        const passMapping = {
+        const passMapping: PassMapping = {
             '{{WINDOWSPE_PASS}}': 'windowspe',
             '{{OFFLINESERVICING_PASS}}': 'offlineservicing',
             '{{GENERALIZE_PASS}}': 'generalize',
@@ -65,14 +83,14 @@ class AutoUnattendBuilder {
             fs.writeFileSync(this.outputPath, template, 'utf8');
             console.log(`✓ Successfully generated autounattend.xml at: ${this.outputPath}`);
         } catch (error) {
-            console.error(`Error writing output file: ${error.message}`);
+            console.error(`Error writing output file: ${(error as Error).message}`);
             throw error;
         }
 
         return this.outputPath;
     }
 
-    validateXml() {
+    private validateXml(): boolean {
         // Basic XML validation - check if file is well-formed
         try {
             const content = fs.readFileSync(this.outputPath, 'utf8');
@@ -90,12 +108,12 @@ class AutoUnattendBuilder {
                 return false;
             }
         } catch (error) {
-            console.error(`Error validating XML: ${error.message}`);
+            console.error(`Error validating XML: ${(error as Error).message}`);
             return false;
         }
     }
 
-    build() {
+    public build(): BuildResult {
         try {
             const outputPath = this.buildAutounattend();
             const isValid = this.validateXml();
@@ -107,8 +125,8 @@ class AutoUnattendBuilder {
             
             return { success: true, outputPath, isValid };
         } catch (error) {
-            console.error(`Build failed: ${error.message}`);
-            return { success: false, error: error.message };
+            console.error(`Build failed: ${(error as Error).message}`);
+            return { success: false, error: (error as Error).message };
         }
     }
 }
@@ -121,4 +139,4 @@ if (require.main === module) {
     process.exit(result.success ? 0 : 1);
 }
 
-module.exports = AutoUnattendBuilder;
+export default AutoUnattendBuilder;
